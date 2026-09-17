@@ -1,0 +1,593 @@
+
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VS Games</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: white;
+  background: #090d18;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 6%;
+  background: #10182a;
+  border-bottom: 1px solid #293650;
+}
+
+.logo {
+  font-size: 25px;
+  font-weight: bold;
+}
+
+.logo span { color: #45d9e8; }
+
+button, .play {
+  padding: 11px 17px;
+  border: none;
+  border-radius: 9px;
+  background: #7357ff;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+button:hover, .play:hover {
+  filter: brightness(1.2);
+}
+
+main {
+  max-width: 1100px;
+  margin: auto;
+  padding: 45px 20px;
+}
+
+.hero {
+  padding: 45px 0;
+}
+
+.hero h1 {
+  font-size: clamp(40px, 7vw, 75px);
+  margin: 12px 0;
+}
+
+.hero h1 span { color: #45d9e8; }
+
+.hero p {
+  color: #aab6cc;
+  line-height: 1.7;
+}
+
+h2 { font-size: 30px; }
+
+.games {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.game {
+  background: #111a2c;
+  border: 1px solid #293650;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.cover {
+  height: 180px;
+  background: #1c2942;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #45d9e8;
+  font-size: 45px;
+  font-weight: bold;
+}
+
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.game-info { padding: 20px; }
+
+.game-info p {
+  color: #aab6cc;
+  line-height: 1.5;
+}
+
+.empty {
+  padding: 30px;
+  text-align: center;
+  color: #aab6cc;
+  border: 1px dashed #293650;
+  border-radius: 15px;
+}
+
+footer {
+  text-align: center;
+  padding: 25px;
+  color: #8491a8;
+  border-top: 1px solid #293650;
+}
+
+/* Adminvindauge */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #000c;
+  z-index: 10;
+  padding: 15px;
+  overflow: auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay.open { display: flex; }
+
+.modal {
+  background: #111a2c;
+  border: 1px solid #293650;
+  border-radius: 15px;
+  padding: 25px;
+  width: 100%;
+  max-width: 750px;
+  max-height: 95vh;
+  overflow: auto;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+  margin: 15px 0;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 12px;
+  background: #090f1d;
+  border: 1px solid #34425e;
+  border-radius: 8px;
+  color: white;
+  font: inherit;
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.secondary { background: #263650; }
+.danger { background: #a52e49; }
+
+.admin-game {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #293650;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 10px;
+}
+
+.admin-game img {
+  width: 55px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.admin-game .details {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+#error { color: #ff8da6; }
+
+@media(max-width: 550px) {
+  header { padding: 15px; }
+  .admin-game { flex-wrap: wrap; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">VS <span>GAMES</span></div>
+  <button onclick="openLogin()">⚙ Admin</button>
+</header>
+
+<main>
+  <section class="hero">
+    <p style="color:#45d9e8;font-weight:bold">
+      INDEPENDENT GAME STUDIO
+    </p>
+    <h1>Velkomen til <span>VS Games</span></h1>
+    <p>
+      Oppdag spela våre. Vel eit spel for å gå vidare
+      til spelet si eiga nettside.
+    </p>
+  </section>
+
+  <section>
+    <h2>Spela våre</h2>
+    <div class="games" id="games"></div>
+  </section>
+</main>
+
+<footer>© 2026 VS Games. Alle rettar reserverte.</footer>
+
+<!-- INNLOGGING -->
+<div class="overlay" id="login">
+  <div class="modal" style="max-width:420px">
+    <div class="actions">
+      <h2 style="flex:1">Admininnlogging</h2>
+      <button class="secondary" onclick="closeModal('login')">✕</button>
+    </div>
+
+    <form onsubmit="loginAdmin(event)">
+      <div class="field">
+        <label for="password">Passord</label>
+        <input id="password" type="password" required>
+      </div>
+      <p id="error"></p>
+      <button type="submit">Logg inn</button>
+    </form>
+  </div>
+</div>
+
+<!-- ADMINPANEL -->
+<div class="overlay" id="admin">
+  <div class="modal">
+    <div class="actions">
+      <h2 style="flex:1">Adminpanel</h2>
+      <button class="secondary" onclick="closeModal('admin')">✕</button>
+    </div>
+
+    <p style="color:#aab6cc">
+      Legg til og administrer spel på VS Games.
+    </p>
+
+    <form id="gameForm" onsubmit="saveGame(event)">
+      <input type="hidden" id="editId">
+
+      <div class="field">
+        <label for="name">Spelnamn *</label>
+        <input id="name" maxlength="80" required>
+      </div>
+
+      <div class="field">
+        <label for="url">Nettadresse til spelet *</label>
+        <input id="url" type="url"
+               placeholder="https://..."
+               required>
+      </div>
+
+      <div class="field">
+        <label for="description">Skildring</label>
+        <textarea id="description"
+                  maxlength="500"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="image">Last opp coverbilete</label>
+        <input id="image" type="file" accept="image/*">
+        <small style="color:#aab6cc">
+          Bruk helst bilete under 2 MB.
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="online">Status</label>
+        <select id="online">
+          <option value="true">Online</option>
+          <option value="false">Offline</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button type="submit" id="saveButton">Lagre spel</button>
+        <button type="button" class="secondary"
+                onclick="resetForm()">Tøm skjema</button>
+      </div>
+    </form>
+
+    <h3>Administrer spel</h3>
+    <div id="adminGames"></div>
+
+    <div class="actions" style="margin-top:20px">
+      <button class="danger" onclick="logout()">Logg ut</button>
+      <button class="secondary" onclick="exportData()">
+        Eksporter speldata
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PASSWORD = "At-bak-syklar-gammal1";
+const STORAGE_KEY = "vsgames.games";
+
+let games = loadGames();
+
+function loadGames() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function validURL(value) {
+  try {
+    const url = new URL(value);
+    return ["http:", "https:"].includes(url.protocol)
+      ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function renderGames() {
+  const container = document.getElementById("games");
+  const onlineGames = games.filter(game => game.online);
+
+  if (!onlineGames.length) {
+    container.innerHTML =
+      '<div class="empty">Ingen spel er publiserte enno. ' +
+      'Kom tilbake seinare!</div>';
+    return;
+  }
+
+  container.innerHTML = onlineGames.map(game => `
+    <article class="game">
+      <div class="cover">
+        ${game.image
+          ? `<img src="${game.image}" alt="">`
+          : "VS"}
+      </div>
+      <div class="game-info">
+        <h3>${escapeHTML(game.name)}</h3>
+        <p>${escapeHTML(game.description || "Opne spelet.")}</p>
+        <a class="play"
+           href="${escapeHTML(game.url)}"
+           target="_blank"
+           rel="noopener noreferrer">
+          Spel no ↗
+        </a>
+      </div>
+    </article>
+  `).join("");
+}
+
+function renderAdmin() {
+  const container = document.getElementById("adminGames");
+
+  if (!games.length) {
+    container.innerHTML =
+      '<div class="empty">Ingen spel er lagra.</div>';
+    return;
+  }
+
+  container.innerHTML = games.map(game => `
+    <div class="admin-game">
+      ${game.image
+        ? `<img src="${game.image}" alt="">`
+        : '<div style="width:55px">🎮</div>'}
+      <div class="details">
+        <strong>${escapeHTML(game.name)}</strong>
+        <div style="color:#aab6cc">
+          ${game.online ? "🟢 Online" : "🔴 Offline"}
+        </div>
+      </div>
+      <div class="actions">
+        <button class="secondary"
+          onclick="editGame('${game.id}')">
+          Rediger
+        </button>
+        <button class="danger"
+          onclick="removeGame('${game.id}')">
+          Fjern
+        </button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function openLogin() {
+  document.getElementById("login").classList.add("open");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("open");
+}
+
+function loginAdmin(event) {
+  event.preventDefault();
+
+  if (document.getElementById("password").value
+      !== ADMIN_PASSWORD) {
+    document.getElementById("error").textContent =
+      "Feil passord.";
+    return;
+  }
+
+  document.getElementById("error").textContent = "";
+  document.getElementById("password").value = "";
+  closeModal("login");
+
+  document.getElementById("admin").classList.add("open");
+  renderAdmin();
+}
+
+function logout() {
+  closeModal("admin");
+  resetForm();
+}
+
+function resetForm() {
+  document.getElementById("gameForm").reset();
+  document.getElementById("editId").value = "";
+  document.getElementById("saveButton").textContent =
+    "Lagre spel";
+}
+
+function editGame(id) {
+  const game = games.find(item => item.id === id);
+  if (!game) return;
+
+  document.getElementById("editId").value = game.id;
+  document.getElementById("name").value = game.name;
+  document.getElementById("url").value = game.url;
+  document.getElementById("description").value =
+    game.description || "";
+  document.getElementById("online").value =
+    String(game.online);
+  document.getElementById("image").value = "";
+
+  document.getElementById("saveButton").textContent =
+    "Oppdater spel";
+
+  document.getElementById("gameForm")
+    .scrollIntoView({ behavior: "smooth" });
+}
+
+function removeGame(id) {
+  const game = games.find(item => item.id === id);
+  if (!game) return;
+
+  if (!confirm(`Vil du fjerne ${game.name}?`)) return;
+
+  games = games.filter(item => item.id !== id);
+  saveData();
+  renderGames();
+  renderAdmin();
+
+  if (document.getElementById("editId").value === id) {
+    resetForm();
+  }
+}
+
+function readImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function saveGame(event) {
+  event.preventDefault();
+
+  const name = document.getElementById("name").value.trim();
+  const url = validURL(
+    document.getElementById("url").value.trim()
+  );
+
+  if (!url) {
+    alert("Skriv inn ei gyldig http:// eller https:// adresse.");
+    return;
+  }
+
+  const editId = document.getElementById("editId").value;
+  const oldGame = games.find(game => game.id === editId);
+  const file = document.getElementById("image").files[0];
+
+  if (file && file.size > 2 * 1024 * 1024) {
+    alert("Biletet er for stort. Vel eit bilete under 2 MB.");
+    return;
+  }
+
+  let image = oldGame?.image || "";
+
+  if (file) {
+    try {
+      image = await readImage(file);
+    } catch {
+      alert("Kunne ikkje lese biletet.");
+      return;
+    }
+  }
+
+  const game = {
+    id: editId || crypto.randomUUID(),
+    name,
+    url,
+    description:
+      document.getElementById("description").value.trim(),
+    image,
+    online:
+      document.getElementById("online").value === "true"
+  };
+
+  if (oldGame) {
+    games = games.map(item =>
+      item.id === editId ? game : item
+    );
+  } else {
+    games.unshift(game);
+  }
+
+  try {
+    saveData();
+    renderGames();
+    renderAdmin();
+    resetForm();
+  } catch {
+    alert("Lagringa feila. Prøv eit mindre bilete.");
+  }
+}
+
+function exportData() {
+  const blob = new Blob(
+    [JSON.stringify(games, null, 2)],
+    { type: "application/json" }
+  );
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "vs-games-data.json";
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+renderGames();
+</script>
+
+</body>
+</html>
